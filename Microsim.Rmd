@@ -38,7 +38,7 @@ p_load_gh("DARTH-git/darthtools")
 # Time and population parameters
 cycle_length   <- 1/12       # one month
 n_cycles       <- 24         # time horizon in cycles
-n_i            <- 100000      # number of births per year
+n_i            <- 100000      # number of births per year ########################################################
 
 
 v_names_cycles <- paste("cycle", 0:n_cycles)
@@ -55,6 +55,7 @@ d_e <- 0.000   # QALY discount rate
 
 
 # We investigate these vaccine strategies:
+#"No Intervention"
 #"Palivizumab"
 #"Nirsevimab (High)"
 #"Nirsevimab (High & Mod)"
@@ -63,10 +64,10 @@ d_e <- 0.000   # QALY discount rate
 #"Nirsevimab (Universal)"
 
 # Strategies
-v_names_str <- c(#"No Prevention",
+v_names_str <- c("No Intervention",
                  "Palivizumab",
-                 #"Nirsevimab (High)",
                  "Nirsevimab (High & Mod)",
+                 "RSVpreF",
                  "RSVpreF + Nirsevimab (High)",
                  "RSVpreF + Nirsevimab (High & Mod)",
                  "Nirsevimab (Universal)")
@@ -132,9 +133,9 @@ u_rs <- u_Total - (n_cycles-6) * cycle_length  # Mean Utility for rest of the li
 #############################################################################################
 l_params <- list(
   
-  base_str = "Palivizumab", # Base strategy
+  base_str = "No Intervention", # Base strategy
   
-  n_sim = 40,        # Number of simulations for each strategy
+  n_sim = 10,        # Number of simulations for each strategy #######################################################
 
   PD_ICU = 4615, # Cost per day for ICU, from Vadlamudi 2025
   PD_PW = 2283,  # Cost per day for PW, from Vadlamudi 2025
@@ -872,6 +873,9 @@ MicroSim <- function(l_params, df_X, n_i, Str, seed) {
     df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
     df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
     
+  } else if (Str == "RSVpreF") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    
   } else if (Str == "RSVpreF + Nirsevimab (High)") {
     df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
     df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
@@ -1095,7 +1099,7 @@ table_cea
 
 ```{r}
 ## CEA frontier 
-ICER_Plot <- plot(df_cea, label = "all", txtsize = 11) +
+ICER_Plot <- plot(df_cea, label = "all", txtsize = 14) +
   expand_limits(x = max(table_cea$QALYs) + 0.1) +
   theme(legend.position = c(0.15, 0.85))
 
@@ -1129,6 +1133,9 @@ microsim <- function(l_params, df_X, n_i, Str, seed) {
   } else if (Str == "Nirsevimab (High & Mod)") {
     df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
     df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
+    
+  } else if (Str == "RSVpreF") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
     
   } else if (Str == "RSVpreF + Nirsevimab (High)") {
     df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
@@ -1218,6 +1225,7 @@ calculate_ce_out <- function(l_params, n_wtp = 50000){ # User defined
     
     ## Vector with discounted net monetary benefits (NMB)
     v_nmb <- ((v_tot_qaly-base_str_qaly) * n_wtp - (v_tot_cost-base_str_cost))/1000
+    #v_nmb <- ((v_tot_qaly) * n_wtp - (v_tot_cost))/1000
     
     ## data.frame with discounted costs, effectiveness and NMB
     df_ce <- data.frame(Strategy = v_names_str,
@@ -1242,9 +1250,9 @@ calculate_ce_out <- function(l_params, n_wtp = 50000){ # User defined
 ############################################################
 prm <- list(
   
-  base_str = "Palivizumab",
+  base_str = "No Intervention",
   
-  n_sim = 10,
+  n_sim = 10,        # Number of simulation #########################################################################
 
   PD_ICU = 4615, # Cost per day for ICU, from Vadlamudi 2025
   PD_PW = 2283,  # Cost per day for PW, from Vadlamudi 2025
@@ -1448,11 +1456,13 @@ prm_u <- list(
 ```{r}
 
 # Strategies
-v_names_str <- c("Palivizumab",
-                 #"Nirsevimab (High & Mod)",
-                 #"RSVpreF + Nirsevimab (High)",
-                 "RSVpreF + Nirsevimab (High & Mod)"
-                 #"Nirsevimab (Universal)"
+v_names_str <- c("No Intervention",
+                 "Palivizumab",
+                 "Nirsevimab (High & Mod)",
+                 "RSVpreF",
+                 "RSVpreF + Nirsevimab (High)",
+                 "RSVpreF + Nirsevimab (High & Mod)",
+                 "Nirsevimab (Universal)"
                  )
 n_str <- length(v_names_str)
 
@@ -1501,7 +1511,7 @@ df_params_owsa <- data.frame(pars = c("c_RSVpreF", "c_nirsevimab",
                              )
 owsa_nmb  <- run_owsa_det(params_range     = df_params_owsa,    # dataframe with parameters for OWSA
                           params_basecase  = prm,      # list with all parameters
-                          nsamp            = 40,               # number of parameter values
+                          nsamp            = 20,               # number of parameter values ######################################
                           FUN              = calculate_ce_out,  # function to compute outputs
                           outcomes         = c("NMB"),          # output to do the OWSA on
                           strategies       = v_names_str,       # names of the strategies
@@ -1534,8 +1544,13 @@ owsa_nmb_nice <- owsa_nmb %>%
 
 
 nice_names_strats <- c(
-  Palivizumab                          = "Palivizumab",
-  `RSVpreF...Nirsevimab..High...Mod.`  = "RSVpreF + Nirsevimab (High & Mod)"
+  `No.Intervention`                   = "No Intervention",
+  `Palivizumab`                       = "Palivizumab",
+  `Nirsevimab..High...Mod.`           = "Nirsevimab (High & Mod)",
+  `RSVpreF`                           = "RSVpreF",
+  `RSVpreF...Nirsevimab..High.`       = "RSVpreF + Nirsevimab (High)",
+  `RSVpreF...Nirsevimab..High...Mod.` = "RSVpreF + Nirsevimab (High & Mod)",
+  `Nirsevimab..Universal.`            = "Nirsevimab (Universal)"
 )
 
 owsa_nmb_nice <- owsa_nmb_nice %>%
@@ -1566,12 +1581,29 @@ plot_owsa_tornado
 ```{r}
 plot_owsa <- plot(owsa_nmb_nice, txtsize = 11, n_x_ticks = 5, 
      facet_scales = "free") +
+     labs(y = "E[NMB]", x = "Parameter Values") +
      theme(
          legend.text = element_text(size = 11),
          axis.text.x = element_text(size = 7)  # Change this number as needed
      )
 
-ggsave(filename = "owsa.png", plot = plot_owsa, width = 12, height = 8, dpi = 500)
+ggsave(filename = "owsa(with all-infant).png", plot = plot_owsa, width = 12, height = 8, dpi = 500)
+
+plot_owsa
+```
+
+```{r}
+plot_owsa <- owsa_nmb_nice %>%
+  filter(strategy != "Nirsevimab (Universal)") %>%  # Exclude
+  droplevels() %>%
+  plot(txtsize = 11, n_x_ticks = 5, facet_scales = "free") +
+  labs(y = "E[NMB]", x = "Parameter Values") +
+  theme(
+    legend.text = element_text(size = 11),
+    axis.text.x = element_text(size = 7)
+  )
+
+ggsave(filename = "owsa (without all-infant).png", plot = plot_owsa, width = 12, height = 8, dpi = 500)
 
 plot_owsa
 ```
@@ -1592,11 +1624,13 @@ plot_owsa
 
 ```{r}
 
-n_i            <- 10000      # number of births per year
+n_i            <- 20000      # number of births per year ###############################################################
 
 # Strategies
-v_names_str <- c("Palivizumab",
+v_names_str <- c("No Intervention",
+                 "Palivizumab",
                  "Nirsevimab (High & Mod)",
+                 "RSVpreF",
                  "RSVpreF + Nirsevimab (High)",
                  "RSVpreF + Nirsevimab (High & Mod)",
                  "Nirsevimab (Universal)"
@@ -1622,7 +1656,7 @@ df_params_twsa <- data.frame(pars = c("c_RSVpreF", "c_nirsevimab"),
 
 twsa_nmb <- run_twsa_det(params_range    = df_params_twsa,    # dataframe with parameters for TWSA
                          params_basecase = prm,      # list with all parameters
-                         nsamp           = 50,                # number of parameter values
+                         nsamp           = 20,                # number of parameter values ####################################
                          FUN             = calculate_ce_out,  # function to compute outputs
                          outcomes        = "NMB",             # output to do the TWSA on
                          strategies      = v_names_str,       # names of the strategies
@@ -1630,8 +1664,10 @@ twsa_nmb <- run_twsa_det(params_range    = df_params_twsa,    # dataframe with p
 ```
 ```{r}
 nice_names_strats_twsa <- c(
-  Palivizumab                         = "Palivizumab",
+  `No.Intervention`                   = "No Intervention",
+  `Palivizumab`                       = "Palivizumab",
   `Nirsevimab..High...Mod.`           = "Nirsevimab (High & Mod)",
+  `RSVpreF`                           = "RSVpreF",
   `RSVpreF...Nirsevimab..High.`       = "RSVpreF + Nirsevimab (High)",
   `RSVpreF...Nirsevimab..High...Mod.` = "RSVpreF + Nirsevimab (High & Mod)",
   `Nirsevimab..Universal.`            = "Nirsevimab (Universal)"
@@ -1661,11 +1697,13 @@ twsa_nmb_nice <- twsa_nmb_nice %>%
 plot_twsa_nmb <- plot(twsa_nmb_nice, txtsize = 12, facet_scales = "free") +
   scale_fill_manual(
     values = c(
-      "Palivizumab" = "#000000",
-      "Nirsevimab (High & Mod)" = "#E69F00",
-      "RSVpreF + Nirsevimab (High)" = "#56B4E9",
-      "RSVpreF + Nirsevimab (High & Mod)" = "#009E73",
-      "Nirsevimab (Universal)" = "#F0E442"
+      "No Intervention" = "#999999",                 # neutral gray
+      "Palivizumab" = "#000000",                     # black
+      "RSVpreF" = "#0072B2",                         # deep blue
+      "Nirsevimab (High & Mod)" = "#E69F00",         # orange
+      "RSVpreF + Nirsevimab (High)" = "#56B4E9",     # light blue
+      "RSVpreF + Nirsevimab (High & Mod)" = "#009E73",# green
+      "Nirsevimab (Universal)" = "#F0E442"           # yellow
     )
   ) +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # Increase y-axis ticks
