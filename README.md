@@ -1,34 +1,196 @@
-# Cost-effectiveness of infant and maternal RSV immunization strategies in British Columbia, Canada
+# RSV Cost-Effectiveness Model — British Columbia
 
-This repository contains the simulation code and supporting data for the paper **"Cost-effectiveness of infant and maternal RSV immunization strategies, in British Columbia, Canada."** The analysis evaluates recently available preventive options (nirsevimab and RSVpreF) alongside the historical palivizumab standard of care using a discrete-event simulation informed by provincial epidemiological and costing data.
+An individual-level microsimulation model evaluating the cost-effectiveness of
+seven RSV immunisation strategies for infants in British Columbia, Canada.
 
-## Abstract
-Background: Respiratory syncytial virus (RSV) is a leading cause of lower respiratory tract infections in young children and results in significant healthcare burden and costs. To reduce the impact of RSV in this population, the monoclonal antibody palivizumab has historically been used. Recently, new preventive options have become available, including a longer-acting monoclonal antibody (nirsevimab) and a maternal vaccine (RSVpreF).
+---
 
-Methods: We developed a discrete-event simulation model using epidemiological and cost data from British Columbia, Canada, and published efficacy estimates. The model simulated a cohort of 100,000 newborns and followed them up to 24 months. We conducted the analysis from a healthcare system perspective, evaluating five immunization strategies: (1) the historical palivizumab standard of care for high-risk children; (2) nirsevimab for high- and moderate-risk children; (3) in-season maternal RSVpreF vaccination combined with nirsevimab for high-risk children; (4) in-season maternal RSVpreF plus nirsevimab for high- and moderate-risk children; and (5) nirsevimab for all infants. We conducted a sequential cost-effectiveness analysis, ordering strategies by cost, excluding dominated or extendedly dominated options, and evaluating the remaining strategies stepwise. To support policy interpretation, we also performed a pairwise analysis comparing each strategy directly with the historical standard of care.
+## Overview
 
-Results: In the sequential analysis, strategy 2 was the most cost-effective option. Strategy 4 provided additional health gains but was not cost-effective incrementally (ICER ≈ $119,000 per QALY vs strategy 2). Strategy 5 offered the greatest overall health benefits but was the least cost-effective option. When compared directly with the historical standard of care, however, strategy 4 was cost-effective (ICER ≈ $18,000 per QALY).
+The model simulates monthly health-state transitions for a cohort of 10,000
+infants over a 24-month follow-up period and computes costs (vaccine,
+inpatient, outpatient) and quality-adjusted life years (QALYs) for each
+immunisation strategy. Results feed into a cost-effectiveness analysis (CEA)
+with one-way and two-way deterministic sensitivity analyses.
 
-Interpretation: These findings support policy recommendations to prioritize nirsevimab for high- and moderate-risk infants as the most cost-effective strategy. Maternal RSVpreF vaccination offers added health benefits and is cost-effective compared with the historical standard of care, though not when considered incrementally.
+This repository contains the simulation code and supporting data for the paper:
+**"Cost-effectiveness of infant and maternal RSV immunization strategies in
+British Columbia, Canada."**
 
-## Repository structure
-- `Microsim.Rmd`: R Markdown document implementing the discrete-event simulation, including parameter definitions, model structure, and economic evaluation workflow.
-- `Data/RSV_AllMetrics_withCI.csv`: Summary of key epidemiological and program parameters (means and confidence intervals) used to populate the model.
-- `Data/RSV_Hosp_model_coefficients.csv`: Logistic regression coefficients for hospitalization risk as a function of month of life, with standard errors and confidence limits.
+**Strategies evaluated**
+
+| # | Strategy |
+|---|----------|
+| 1 | No Intervention |
+| 2 | Palivizumab (historical standard of care) |
+| 3 | Nirsevimab — high- and moderate-risk infants |
+| 4 | RSVpreF maternal vaccine only |
+| 5 | RSVpreF + nirsevimab (high-risk infants) |
+| 6 | RSVpreF + nirsevimab (high- and moderate-risk infants) |
+| 7 | Nirsevimab — all infants (universal) |
+
+**Key findings:** Nirsevimab for high- and moderate-risk infants (Strategy 3)
+is the most cost-effective option at a $50,000/QALY threshold. The combined
+RSVpreF + nirsevimab strategy (Strategy 6) offers greater health benefits but
+at an incremental cost of ~$119K/QALY vs. Strategy 3; when compared directly
+to palivizumab, Strategy 6 is cost-effective at ~$18K/QALY.
+
+---
+
+## Model structure
+
+**Health states:** Newborn (NB) → Healthy (H) ↔ RSV infection (RSV) → Death (D)
+
+**Treatment types:** No treatment (NT), Doctor visit (DV), Emergency department
+(ED), Paediatric ward (PW), ICU
+
+**Hospitalisation probability** is estimated from a logistic regression model
+fitted to BC surveillance data, with predictors for age (polynomial in
+month-of-life), RSV seasonality (calendar month), risk level, and palivizumab
+use.
+
+**Vaccine efficacy** is modelled as constant for the first 5 months
+post-administration, then declining linearly to zero by month 10.
+
+---
+
+## Project structure
+
+```
+RSV-Cost-effectiveness-model/
+├── main.R                          # Entry point — run this to reproduce all results
+├── R/
+│   ├── 01_packages.R               # Package loading (CRAN + GitHub)
+│   ├── 02_parameters.R             # Fixed constants: time horizon, state names, efficacy scalars
+│   ├── 03_data_loading.R           # build_params(): reads CSVs, returns canonical l_params
+│   ├── 04_vaccine_efficacy.R       # vaccine_efficacy(), build_vaccine_efficacy_list()
+│   ├── 05_cohort.R                 # create_cohort(): individual-level characteristics
+│   ├── 06_strategies.R             # Vaccination strategy functions + apply_strategy() dispatch
+│   ├── 07_model_functions.R        # Hospitalisation probability, state transitions,
+│   │                               #   vaccine modifiers, treatment assignment, costs, QALYs
+│   ├── 08_microsimulation.R        # MicroSim(): the core simulation loop
+│   ├── 09_run_simulation.R         # run_base_case(): runs all strategies × replications
+│   ├── 10_cea.R                    # run_cea(): ICER table and CE-plane plot
+│   └── 11_sensitivity_analysis.R   # calculate_ce_out(), run_owsa(), run_twsa()
+├── Data/
+│   ├── RSV_AllMetrics_withCI.csv               # Epidemiological parameters with 95% CIs
+│   └── RSV_Hosp_model_coefficients.csv         # Logistic regression coefficients
+├── Output/                         # Generated CSV results and PNG plots
+├── report/
+│   └── analysis_report.Rmd         # Self-contained R Markdown report
+└── README.md
+```
+
+---
 
 ## Requirements
-- R (version 4.0+ recommended)
-- R packages: `pacman`, `devtools`, `dplyr`, `scales`, `ellipse`, `ggplot2`, `lazyeval`, `igraph`, `truncnorm`, `ggraph`, `reshape2`, `knitr`, `markdown`, `stringr`, `dampack`, `matrixStats`, and `darthtools` (from GitHub: `DARTH-git/darthtools`). The R Markdown document installs any missing packages via `pacman` when rendered.
 
-## Running the analysis
-1. Open the project in R or RStudio.
-2. Ensure the working directory is the repository root so the `Data/` files are discoverable.
-3. Knit `Microsim.Rmd` to HTML or PDF (via the **Knit** button in RStudio or by running `rmarkdown::render("Microsim.Rmd")`).
-4. The document will run the discrete-event simulation, generate figures, and summarize cost-effectiveness outcomes for the five immunization strategies.
+- **R** ≥ 4.0
+- Packages are installed automatically on first run via `pacman`:
+  `dplyr`, `ggplot2`, `scales`, `dampack`, `matrixStats`, `truncnorm`,
+  `reshape2`, `stringr`, `knitr`, `markdown`, `devtools`, and
+  `DARTH-git/darthtools` (from GitHub)
 
-## Reproducibility notes
-- The simulation seeds and number of iterations are defined in the `l_params` list within `Microsim.Rmd`. Adjust these values if you wish to explore alternative cohort sizes or probabilistic sensitivity analyses.
-- Cost inputs, efficacy assumptions, and treatment pathways are parameterized near the top of `Microsim.Rmd` for easy updating as new evidence becomes available.
+---
+
+## How to run
+
+### Full analysis
+
+Open R (or RStudio) in the project root and run:
+
+```r
+source("main.R")
+```
+
+This will, in order:
+
+1. Load all packages
+2. Build the parameter list from the data files
+3. Run the base-case simulation (10 iterations × 7 strategies)
+4. Produce the ICER table and CE-plane plot
+5. Run the one-way sensitivity analysis (tornado and curve plots)
+6. Run the two-way sensitivity analysis (RSVpreF × nirsevimab price heatmap)
+
+All outputs (CSV and PNG files) are written to `./Output/`.
+
+### Rendered report
+
+Knit `report/analysis_report.Rmd` from RStudio, or run:
+
+```r
+rmarkdown::render("report/analysis_report.Rmd", output_dir = "Output")
+```
+
+### Partial runs
+
+Source `main.R` up through the parameter-building step, then call individual
+functions as needed:
+
+```r
+source("R/01_packages.R")
+source("R/02_parameters.R")
+source("R/03_data_loading.R")
+source("R/04_vaccine_efficacy.R")
+# ... source remaining R/ scripts ...
+
+l_params              <- build_params()
+l_params              <- add_rsvma_vectors(l_params)
+vaccine_efficacy_list <- build_vaccine_efficacy_list(l_params)
+
+# Run only the sensitivity analysis at a different WTP threshold
+run_owsa(l_params, n_wtp = 100000)
+```
+
+---
+
+## Extending the model
+
+### Adding a new immunisation strategy
+
+1. Write a strategy function in `R/06_strategies.R` following the same pattern
+   as `Palivizumab()` or `Nirsevimab_HighRisk_WithCatchup()`.
+2. Register it in the `strategy_fns` list inside `apply_strategy()`.
+3. Add the strategy name to `v_names_str` in `R/02_parameters.R`.
+
+### Changing model parameters
+
+All base-case parameters are defined in `build_params()` (`R/03_data_loading.R`)
+and the fixed constants in `R/02_parameters.R`. Sensitivity-analysis ranges are
+set in `build_sa_ranges()` (`R/11_sensitivity_analysis.R`).
+
+To run a quick scenario without modifying any files:
+
+```r
+l_alt <- l_params
+l_alt$c_nirsevimab <- 300          # lower nirsevimab price
+l_alt <- add_rsvma_vectors(l_alt)  # rebuild RSVMA efficacy vectors
+run_base_case(l_alt, vaccine_efficacy_list)
+```
+
+---
+
+## Data sources
+
+| Parameter | Source |
+|-----------|--------|
+| ICU and ward unit costs | Vadlamudi et al. 2025 |
+| ED and doctor-visit costs | Shoukat et al. 2023 |
+| Palivizumab efficacy | NACI guidance |
+| RSVpreF (Abrysvo) efficacy | Kampmann et al. 2023 |
+| Nirsevimab (Beyfortus) efficacy | Simões et al. 2023 |
+| Hospitalisation rates, ICU probabilities, length of stay | BC provincial surveillance data |
+
+---
+
+## Citation
+
+If you use this model in your work, please cite:
+
+> Taleshi J et al. *Cost-effectiveness of infant and maternal RSV immunization
+> strategies in British Columbia, Canada.* (in preparation)
 
 ## Contact
-For questions about the model or manuscript, please contact the corresponding author listed in the paper.
+
+For questions about the model or manuscript, please contact the corresponding
+author listed in the paper.
