@@ -117,6 +117,15 @@ build_params <- function(data_path = "./Data") {
     n_i  = n_i,
     seed = seed,
 
+    # When analytic_mort = TRUE, Effs() subtracts the *expected* QALY penalty
+    # from death at every cycle (p_mort * u_rs for non-inpatient individuals,
+    # p_mort_Inp * u_rs for ICU/PW), and MicroSim() skips the end-of-simulation
+    # stochastic penalty.  This removes all Monte-Carlo noise from the rare-event
+    # death term, producing smooth OWSA/TWSA curves without any change to the
+    # state-transition draws.  Set TRUE in sensitivity analyses; FALSE (default)
+    # preserves the fully stochastic base-case behaviour.
+    analytic_mort = FALSE,
+
     # Raw metrics table — retained so sensitivity-analysis bounds can be
     # looked up from confidence intervals without re-reading the file.
     all_metrics = all_metrics

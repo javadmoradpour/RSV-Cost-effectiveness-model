@@ -165,15 +165,36 @@ build_sa_ranges <- function(l_params) {
 
 #' Run one-way sensitivity analysis and produce tornado and curve plots.
 #'
-#' @param l_params   Base-case parameter list.
-#' @param output_dir Directory for PNG output files.
-#' @param nsamp      Number of parameter values sampled per parameter.
-#' @param n_wtp      Willingness-to-pay threshold ($/QALY).
+#' @param l_params    Base-case parameter list.
+#' @param output_dir  Directory for PNG output files.
+#' @param nsamp       Number of parameter values sampled per parameter.
+#' @param n_wtp       Willingness-to-pay threshold ($/QALY).
+#' @param n_sim_sa    Replications used for each OWSA model evaluation.
+#'   Defaults to \code{l_params$n_sim}.  Increasing this (e.g. to 50–100)
+#'   reduces Monte-Carlo noise in the sensitivity curves at the cost of longer
+#'   run times.
+#' @param n_i_sa      Cohort size used for each OWSA evaluation.  Defaults to
+#'   \code{l_params$n_i}.
+#' @param analytic_mort Logical (default \code{TRUE}).  When \code{TRUE},
+#'   replaces the stochastic end-of-simulation death QALY penalty with an
+#'   expected-value calculation at every cycle.  This eliminates Monte-Carlo
+#'   noise from the rare inpatient-mortality event and produces smooth OWSA
+#'   curves for the inpatient-mortality parameter without any change to the
+#'   state-transition logic.  See \code{Effs()} for details.
 #' @return The \code{owsa_nmb} object returned by \code{run_owsa_det()}.
 run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
-                     n_wtp = 50000) {
+                     n_wtp = 50000,
+                     n_sim_sa      = l_params$n_sim,
+                     n_i_sa        = l_params$n_i,
+                     analytic_mort = TRUE) {
 
-  sa_ranges <- build_sa_ranges(l_params)
+  # Build a modified parameter list for SA runs
+  l_params_sa               <- l_params
+  l_params_sa$n_sim         <- n_sim_sa
+  l_params_sa$n_i           <- n_i_sa
+  l_params_sa$analytic_mort <- analytic_mort
+
+  sa_ranges <- build_sa_ranges(l_params_sa)
   prm_l <- sa_ranges$prm_l
   prm_u <- sa_ranges$prm_u
 
@@ -194,7 +215,7 @@ run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
 
   owsa_nmb <- run_owsa_det(
     params_range    = df_params_owsa,
-    params_basecase = l_params,
+    params_basecase = l_params_sa,
     nsamp           = nsamp,
     FUN             = calculate_ce_out,
     outcomes        = "NMB",
@@ -268,19 +289,21 @@ run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
 
 #' Run two-way sensitivity analysis (RSVpreF price × nirsevimab price).
 #'
-#' @param l_params    Base-case parameter list.
-#' @param n_i_twsa   Cohort size for TWSA runs (larger for stability).
-#' @param output_dir  Directory for output files.
-#' @param nsamp       Grid points per price axis.
-#' @param n_wtp       Willingness-to-pay threshold ($/QALY).
+#' @param l_params      Base-case parameter list.
+#' @param n_i_twsa      Cohort size for TWSA runs (larger for stability).
+#' @param output_dir    Directory for output files.
+#' @param nsamp         Grid points per price axis.
+#' @param n_wtp         Willingness-to-pay threshold ($/QALY).
+#' @param analytic_mort Logical (default \code{TRUE}).  See \code{run_owsa()}
+#'   for details.
 #' @return The \code{twsa_nmb} object returned by \code{run_twsa_det()}.
 run_twsa <- function(l_params, n_i_twsa = 20000L, output_dir = "./Output",
-                     nsamp = 20, n_wtp = 50000) {
+                     nsamp = 20, n_wtp = 50000, analytic_mort = TRUE) {
 
-  # Override cohort size inside the parameter list so calculate_ce_out()
-  # picks it up without mutating any global variable.
-  l_params_twsa      <- l_params
-  l_params_twsa$n_i  <- n_i_twsa
+  # Override cohort size and mort mode without mutating any global variable.
+  l_params_twsa               <- l_params
+  l_params_twsa$n_i           <- n_i_twsa
+  l_params_twsa$analytic_mort <- analytic_mort
 
   df_params_twsa <- data.frame(
     pars = c("c_RSVpreF", "c_nirsevimab"),
