@@ -38,7 +38,7 @@ p_load_gh("DARTH-git/darthtools")
 # Time and population parameters
 cycle_length   <- 1/12       # one month
 n_cycles       <- 24         # time horizon in cycles
-n_i            <- 100000      # number of births per year ########################################################
+n_i            <- 10000      # number of births per year ########################################################
 
 
 v_names_cycles <- paste("cycle", 0:n_cycles)
@@ -192,69 +192,58 @@ v_dwe <- 1 / ((1 + (d_c * cycle_length)) ^ (0:n_cycles))
 ```{r}
 ##################################################################################
 ##################################################################################
-load_model_inputs <- function(metrics_path, hosp_coef_path) {
-  metrics <- read.csv(metrics_path)
-  hosp_coef <- read.csv(hosp_coef_path, stringsAsFactors = FALSE)
+# Set the path to the CSV file
+file_path <- "./Data/RSV_AllMetrics_withCI.csv"
 
-  prob_low_risk   <- metrics[metrics$Variable == "prob_LowRisk", "Mean"]
-  prob_high_risk  <- metrics[metrics$Variable == "prob_HighRisk", "Mean"]
+# Read the CSV file
+AllMetrics_list <- read.csv(file_path)
 
-  risk_probabilities <- c(
-    HighRisk     = prob_high_risk,
-    LowRisk      = prob_low_risk,
-    ModerateRisk = 1 - prob_high_risk - prob_low_risk
-  )
 
-  list(
-    metrics = metrics,
-    risk_probabilities = risk_probabilities,
-    coverage_palivizumab_y2 = metrics[metrics$Variable == "pvz_coverage_second_season", "Mean"],
-    rr_prob_icu_second_season = metrics[metrics$Variable == "RR_Prob_ICU_Second", "Mean"],
-    p_mort = metrics[metrics$Variable == "monthly_mortality", "Mean"],
-    icu_prob = list(
-      low = metrics[metrics$Variable == "Prob_ICU_LowRisk", "Mean"],
-      moderate = metrics[metrics$Variable == "Prob_ICU_ModerateRisk", "Mean"],
-      high = metrics[metrics$Variable == "Prob_ICU_HighRisk", "Mean"]
-    ),
-    los_hosp = list(
-      low = metrics[metrics$Variable == "LOS_hosp_LowRisk", "Mean"],
-      moderate = metrics[metrics$Variable == "LOS_hosp_ModerateRisk", "Mean"],
-      high = metrics[metrics$Variable == "LOS_hosp_HighRisk", "Mean"]
-    ),
-    los_icu = list(
-      low = metrics[metrics$Variable == "LOS_icu_LowRisk", "Mean"],
-      moderate = metrics[metrics$Variable == "LOS_icu_ModerateRisk", "Mean"],
-      high = metrics[metrics$Variable == "LOS_icu_HighRisk", "Mean"]
-    ),
-    hosp_coef = hosp_coef,
-    hosp_beta = setNames(hosp_coef$estimate, hosp_coef$term)
-  )
-}
+# Extract the relevant probabilities
+prob_LowRisk  <- AllMetrics_list[AllMetrics_list$Variable == "prob_LowRisk", "Mean"]
+prob_highrisk    <- AllMetrics_list[AllMetrics_list$Variable == "prob_HighRisk", "Mean"]
 
-metrics_path <- "./Data/RSV_AllMetrics_withCI.csv"
-hosp_coef_path <- "./Data/RSV_Hosp_model_coefficients.csv"
-model_inputs <- load_model_inputs(metrics_path, hosp_coef_path)
+# Calculate the risk probabilities with updated HighRisk and LowRisk definitions
+v_risk_prob <- c(
+  HighRisk   = prob_highrisk,
+  LowRisk    = prob_LowRisk,
+  ModerateRisk = 1-prob_highrisk-prob_LowRisk
+  
+)
 
-AllMetrics_list <- model_inputs$metrics
-v_risk_prob <- model_inputs$risk_probabilities
-coverage_palivizumab_y2 <- model_inputs$coverage_palivizumab_y2
-RR_Prob_ICU_Second_season <- model_inputs$rr_prob_icu_second_season
+# pvz coverage in the second season 
+coverage_palivizumab_y2 <- AllMetrics_list[AllMetrics_list$Variable == "pvz_coverage_second_season", "Mean"]
 
-l_params$p_mort <- model_inputs$p_mort
+
+# Monthly mortality rate
+l_params$p_mort <- AllMetrics_list[AllMetrics_list$Variable == "monthly_mortality", "Mean"]
 l_params$p_mort_Inp <- l_params$p_mort
-l_params$Prob_ICU_LowRisk <- model_inputs$icu_prob$low
-l_params$Prob_ICU_ModerateRisk <- model_inputs$icu_prob$moderate
-l_params$Prob_ICU_HighRisk <- model_inputs$icu_prob$high
-l_params$LOS_hosp_LowRisk <- model_inputs$los_hosp$low
-l_params$LOS_hosp_ModerateRisk <- model_inputs$los_hosp$moderate
-l_params$LOS_hosp_HighRisk <- model_inputs$los_hosp$high
-l_params$LOS_icu_LowRisk <- model_inputs$los_icu$low
-l_params$LOS_icu_ModerateRisk <- model_inputs$los_icu$moderate
-l_params$LOS_icu_HighRisk <- model_inputs$los_icu$high
 
+# Probability of ICU admission, condition on hospitalization
+l_params$Prob_ICU_LowRisk <- AllMetrics_list[AllMetrics_list$Variable == "Prob_ICU_LowRisk", "Mean"]
+l_params$Prob_ICU_ModerateRisk <- AllMetrics_list[AllMetrics_list$Variable == "Prob_ICU_ModerateRisk", "Mean"]
+l_params$Prob_ICU_HighRisk <- AllMetrics_list[AllMetrics_list$Variable == "Prob_ICU_HighRisk", "Mean"]
+
+RR_Prob_ICU_Second_season <- AllMetrics_list[AllMetrics_list$Variable == "RR_Prob_ICU_Second", "Mean"]
+
+# Length of stay for hospitalization, without ICU 
+l_params$LOS_hosp_LowRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_hosp_LowRisk", "Mean"]
+l_params$LOS_hosp_ModerateRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_hosp_ModerateRisk", "Mean"]
+l_params$LOS_hosp_HighRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_hosp_HighRisk", "Mean"]
+
+
+# Length of stay in ICU
+l_params$LOS_icu_LowRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_icu_LowRisk", "Mean"]
+l_params$LOS_icu_ModerateRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_icu_ModerateRisk", "Mean"]
+l_params$LOS_icu_HighRisk <- AllMetrics_list[AllMetrics_list$Variable == "LOS_icu_HighRisk", "Mean"]
+
+########################################################################################
+########################################################################################
 # Read the coefficients for probability of hospitalization from the file
-Hosp_model_coef <- model_inputs$hosp_coef
-Hosp_model_beta <- model_inputs$hosp_beta
+
+# Read in the coefficients for hospitalization
+Hosp_model_coef <- read.csv("./Data/RSV_Hosp_model_coefficients.csv", stringsAsFactors = FALSE)
+Hosp_model_beta <- setNames(Hosp_model_coef$estimate, Hosp_model_coef$term)
 
 ```
 
@@ -319,29 +308,33 @@ vaccine_efficacy_list <- list(
 
 create_cohort <- function(n_i) {
   # Everyone starts in state "NB" and we sample birth months and term status.
-  month_born <- sample(1:12, size = n_i, replace = TRUE) # months since start of the simulation
-  risk_level <- sample(
-    names(v_risk_prob),
-    size = n_i,
-    replace = TRUE,
-    prob = v_risk_prob
+  v_M_init   <- rep("NB", n_i)
+  v_monthborn <- sample(1:12, size = n_i, replace = TRUE) # months since start of the simulation
+  v_risk     <- sample(names(v_risk_prob), size = n_i, replace = TRUE, prob = v_risk_prob) # Vector for the risk level of each infants 
+  v_pvz <- ifelse(v_risk == "HighRisk" & v_monthborn > sim_to_rsv_month_gap, 1, 0) # Vector for getting pvz
+  
+  # Vaccination month columns (initialized to NA)
+  v_RSVpreF_Month      <- rep(NA, n_i)
+  v_nirsevimab_Month   <- rep(NA, n_i)
+  v_nirsevimab_Month_y2   <- rep(NA, n_i)
+  v_palivizumab_Month_y1 <- rep(NA, n_i)
+  v_palivizumab_Month_y2 <- rep(NA, n_i)
+  
+  df_X <- data.frame(
+    ID = 1:n_i, 
+    MonthBorn = v_monthborn, 
+    M_init = v_M_init,
+    Risk = v_risk,
+    pvz = v_pvz,
+    RSVpreF_Month = v_RSVpreF_Month, 
+    nirsevimab_Month = v_nirsevimab_Month,
+    nirsevimab_Month_y2 = v_nirsevimab_Month_y2,
+    palivizumab_Month_y1 = v_palivizumab_Month_y1,
+    palivizumab_Month_y2 = v_palivizumab_Month_y2
   )
-
-  pvz_eligible <- risk_level == "HighRisk" & month_born > sim_to_rsv_month_gap
-
-  data.frame(
-    ID = seq_len(n_i),
-    MonthBorn = month_born,
-    M_init = rep("NB", n_i),
-    Risk = risk_level,
-    pvz = ifelse(pvz_eligible, 1, 0),
-    RSVpreF_Month = NA_real_,
-    nirsevimab_Month = NA_real_,
-    nirsevimab_Month_y2 = NA_real_,
-    palivizumab_Month_y1 = NA_real_,
-    palivizumab_Month_y2 = NA_real_
-  )
+  return(df_X)
 }
+
 #df_X <- create_cohort (n_i) 
 #head(df_X)  # print the first rows of the dataframe
 ```
@@ -439,49 +432,6 @@ Nirsevimab_WithCatchup <- function(df_X, coverage_nirsevimab_ModerateRisk) {
                                                 df_X$MonthBorn[vacc_eligible])
   
   return(df_X)
-}
-
-
-# Apply any vaccination strategy to a cohort in a single place to simplify simulation functions
-apply_vaccination_strategy <- function(df_X, strategy, params) {
-  if (strategy == "Palivizumab") {
-    return(Palivizumab(df_X, coverage_palivizumab_y2))
-  }
-
-  if (strategy == "Nirsevimab (High)") {
-    return(Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk))
-  }
-
-  if (strategy == "Nirsevimab (High & Mod)") {
-    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
-    df_X <- Nirsevimab_ModerateRisk_WithCatchup(df_X, params$coverage_nirsevimab_ModerateRisk)
-    return(df_X)
-  }
-
-  if (strategy == "RSVpreF") {
-    return(RSVpreF_RSVSeason(df_X, params$coverage_RSVpreF))
-  }
-
-  if (strategy == "RSVpreF + Nirsevimab (High)") {
-    df_X <- RSVpreF_RSVSeason(df_X, params$coverage_RSVpreF)
-    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
-    return(df_X)
-  }
-
-  if (strategy == "RSVpreF + Nirsevimab (High & Mod)") {
-    df_X <- RSVpreF_RSVSeason(df_X, params$coverage_RSVpreF)
-    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
-    df_X <- Nirsevimab_ModerateRisk_WithCatchup(df_X, params$coverage_nirsevimab_ModerateRisk)
-    return(df_X)
-  }
-
-  if (strategy == "Nirsevimab (Universal)") {
-    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
-    df_X <- Nirsevimab_WithCatchup(df_X, params$coverage_nirsevimab_ModerateRisk)
-    return(df_X)
-  }
-
-  df_X
 }
 
 
@@ -912,7 +862,34 @@ MicroSim <- function(l_params, df_X, n_i, Str, seed) {
 
   set.seed(seed)
 
-  df_X <- apply_vaccination_strategy(df_X, Str, l_params)
+  # Apply vaccination strategies according to Str
+  if (Str == "Palivizumab") {
+    df_X <- Palivizumab (df_X, coverage_palivizumab_y2)
+    
+  } else if (Str == "Nirsevimab (High)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    
+  } else if (Str == "Nirsevimab (High & Mod)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
+    
+  } else if (Str == "RSVpreF") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    
+  } else if (Str == "RSVpreF + Nirsevimab (High)") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    
+  } else if (Str == "RSVpreF + Nirsevimab (High & Mod)") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
+    
+    
+  } else if (Str == "Nirsevimab (Universal)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_WithCatchup(df_X, l_params$coverage_nirsevimab_ModerateRisk)
+  }
   
   # Pre-allocate matrices for health states, treatment, costs, and QALYs.
   m_M    <- m_Tr <- m_C <- m_C_vac <- m_C_inpat <- m_E <- matrix(NA, nrow = n_i, ncol = n_cycles + 1,
@@ -1146,7 +1123,34 @@ table_cea
 
 microsim <- function(l_params, df_X, n_i, Str, seed) {
   set.seed(seed)
-  df_X <- apply_vaccination_strategy(df_X, Str, l_params)
+  # Apply vaccination strategies according to Str
+  if (Str == "Palivizumab") {
+    df_X <- Palivizumab (df_X, coverage_palivizumab_y2) 
+    
+  } else if (Str == "Nirsevimab (High)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    
+  } else if (Str == "Nirsevimab (High & Mod)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
+    
+  } else if (Str == "RSVpreF") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    
+  } else if (Str == "RSVpreF + Nirsevimab (High)") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    
+  } else if (Str == "RSVpreF + Nirsevimab (High & Mod)") {
+    df_X <- RSVpreF_RSVSeason(df_X, l_params$coverage_RSVpreF)
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_ModerateRisk_WithCatchup (df_X, l_params$coverage_nirsevimab_ModerateRisk)
+    
+    
+  } else if (Str == "Nirsevimab (Universal)") {
+    df_X <- Nirsevimab_HighRisk_WithCatchup(df_X, coverage_nirsevimab_HighRisk)
+    df_X <- Nirsevimab_WithCatchup(df_X, l_params$coverage_nirsevimab_ModerateRisk)
+  }
   
   # Pre-allocate matrices for health states, treatment, costs, and QALYs.
   m_M    <- m_Tr <- m_C <- m_E <- matrix(NA, nrow = n_i, ncol = n_cycles + 1,
@@ -1710,6 +1714,3 @@ ggsave(filename = "twsa_nmb.png", plot = plot_twsa_nmb, width = 8, height = 6, d
 
 plot_twsa_nmb
 ```
-
-
-
