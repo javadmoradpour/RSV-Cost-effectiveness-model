@@ -1,0 +1,145 @@
+---
+title: "RSV Immunisation Cost-Effectiveness Analysis — British Columbia"
+subtitle: "Individual-level microsimulation with seven immunisation strategies"
+author: "Javad Taleshi"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    df_print: kable
+  pdf_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      fig.width = 8, fig.height = 5)
+options(scipen = 999)
+rm(list = ls())
+```
+
+```{r source-modules}
+source("../R/01_packages.R")
+source("../R/02_parameters.R")
+source("../R/03_data_loading.R")
+source("../R/04_vaccine_efficacy.R")
+source("../R/05_cohort.R")
+source("../R/06_strategies.R")
+source("../R/07_model_functions.R")
+source("../R/08_microsimulation.R")
+source("../R/09_run_simulation.R")
+source("../R/10_cea.R")
+source("../R/11_sensitivity_analysis.R")
+
+l_params              <- build_params(data_path = "../Data")
+l_params              <- add_rsvma_vectors(l_params)
+vaccine_efficacy_list <- build_vaccine_efficacy_list(l_params)
+```
+
+## Background
+
+This report evaluates the cost-effectiveness of seven RSV immunisation strategies
+for infants in British Columbia, Canada, using a 24-month individual-level
+microsimulation model.
+
+**Strategies compared**
+
+| # | Strategy |
+|---|----------|
+| 1 | No Intervention |
+| 2 | Palivizumab (historical standard of care) |
+| 3 | Nirsevimab — high- and moderate-risk infants |
+| 4 | RSVpreF maternal vaccine only |
+| 5 | RSVpreF + nirsevimab (high-risk) |
+| 6 | RSVpreF + nirsevimab (high- and moderate-risk) |
+| 7 | Nirsevimab — all infants (universal) |
+
+## Base-case results
+
+```{r run-base, cache=TRUE}
+results_table <- run_base_case(
+  l_params              = l_params,
+  vaccine_efficacy_list = vaccine_efficacy_list,
+  n_i                   = n_i,
+  n_sim                 = n_sim,
+  seed                  = seed,
+  output_dir            = "../Output"
+)
+```
+
+```{r show-results}
+results_table %>%
+  select(Strategy, Total_Cost, Vaccine_Cost, Inpatient_Cost,
+         ICU_Count, D_Count, Total_QALY, ICER) %>%
+  mutate(across(c(Total_Cost, Vaccine_Cost, Inpatient_Cost),
+                ~ scales::dollar(round(.x))),
+         across(c(ICU_Count, D_Count), ~ round(.x, 1)),
+         Total_QALY = round(Total_QALY, 1),
+         ICER       = ifelse(is.na(ICER) | is.infinite(ICER), "—",
+                             scales::dollar(round(ICER))))
+```
+
+## Cost-effectiveness frontier
+
+```{r cea, cache=TRUE}
+cea_out <- run_cea(results_table, output_dir = "../Output")
+```
+
+```{r show-cea-table}
+cea_out$table_cea
+```
+
+```{r show-icer-plot, fig.cap="Cost-effectiveness plane. Dominated strategies are shown with dashed lines."}
+cea_out$icer_plot
+```
+
+## One-way sensitivity analysis
+
+```{r owsa, cache=TRUE}
+owsa_nmb <- run_owsa(l_params, output_dir = "../Output", nsamp = 20, n_wtp = 50000)
+```
+
+```{r tornado, fig.cap="Tornado plot: expected net monetary benefit (WTP = $50,000/QALY). The bar length reflects the range of NMB as each parameter moves between its lower and upper bound."}
+knitr::include_graphics("../Output/owsa_tornado.png")
+```
+
+```{r owsa-curves, fig.cap="OWSA sensitivity curves by strategy (excluding universal nirsevimab for clarity)."}
+knitr::include_graphics("../Output/owsa_excl_universal.png")
+```
+
+## Two-way sensitivity analysis
+
+```{r twsa, cache=TRUE}
+twsa_nmb <- run_twsa(l_params, output_dir = "../Output", nsamp = 20, n_wtp = 50000)
+```
+
+```{r twsa-plot, fig.cap="Optimal strategy (highest NMB) across RSVpreF and nirsevimab price combinations at WTP = $50,000/QALY."}
+knitr::include_graphics("../Output/twsa_nmb.png")
+```
+
+## Model parameters
+
+Key parameters used in the base-case analysis:
+
+```{r params-table}
+data.frame(
+  Parameter = c("Cohort size", "Follow-up", "Discount rate",
+                "Nirsevimab price", "RSVpreF price", "Palivizumab (seasonal)",
+                "ICU cost/day", "Ward cost/day",
+                "Nirsevimab peak efficacy (RSVMA)", "RSVpreF peak efficacy (RSVMA)"),
+  Value = c(
+    format(n_i, big.mark = ","),
+    "24 months",
+    "0 %",
+    paste0("$", l_params$c_nirsevimab),
+    paste0("$", l_params$c_RSVpreF),
+    paste0("$", l_params$c_palivizumab, "/season"),
+    paste0("$", l_params$PD_ICU, "/day"),
+    paste0("$", l_params$PD_PW, "/day"),
+    paste0(round(l_params$efficacy_RSVMA_nirsevimab * 100), "%"),
+    paste0(round(l_params$efficacy_RSVMA_RSVpreF    * 100), "%")
+  )
+)
+```
