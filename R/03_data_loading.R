@@ -113,9 +113,11 @@ build_params <- function(data_path = "./Data") {
     hosp_model_beta = hosp_model_beta,
 
     # Simulation settings carried inside l_params so SA wrappers can
-    # override them (e.g. TWSA uses a larger cohort) without touching globals.
-    n_i  = n_i,
-    seed = seed,
+    # override them without touching globals.
+    # n_i_sa is the cohort size used for SA runs (smaller → faster).
+    n_i    = n_i,
+    n_i_sa = n_i_sa,
+    seed   = seed,
 
     # When analytic_mort = TRUE, Effs() subtracts the *expected* QALY penalty
     # from death at every cycle (p_mort * u_rs for non-inpatient individuals,

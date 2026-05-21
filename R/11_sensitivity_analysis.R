@@ -185,7 +185,7 @@ build_sa_ranges <- function(l_params) {
 run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
                      n_wtp = 50000,
                      n_sim_sa      = l_params$n_sim,
-                     n_i_sa        = l_params$n_i,
+                     n_i_sa        = l_params$n_i_sa,
                      analytic_mort = TRUE) {
 
   # Build a modified parameter list for SA runs
@@ -290,14 +290,15 @@ run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
 #' Run two-way sensitivity analysis (RSVpreF price × nirsevimab price).
 #'
 #' @param l_params      Base-case parameter list.
-#' @param n_i_twsa      Cohort size for TWSA runs (larger for stability).
+#' @param n_i_twsa      Cohort size for TWSA runs. Defaults to
+#'   \code{l_params$n_i_sa}; override to a larger value for extra stability.
 #' @param output_dir    Directory for output files.
 #' @param nsamp         Grid points per price axis.
 #' @param n_wtp         Willingness-to-pay threshold ($/QALY).
 #' @param analytic_mort Logical (default \code{TRUE}).  See \code{run_owsa()}
 #'   for details.
 #' @return The \code{twsa_nmb} object returned by \code{run_twsa_det()}.
-run_twsa <- function(l_params, n_i_twsa = 20000L, output_dir = "./Output",
+run_twsa <- function(l_params, n_i_twsa = l_params$n_i_sa, output_dir = "./Output",
                      nsamp = 20, n_wtp = 50000, analytic_mort = TRUE) {
 
   # Override cohort size and mort mode without mutating any global variable.

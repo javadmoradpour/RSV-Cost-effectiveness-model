@@ -10,7 +10,8 @@ options(scipen = 999)
 # --- Time horizon and cohort size ---
 cycle_length <- 1 / 12  # one month, expressed in years
 n_cycles     <- 24      # follow-up length (monthly cycles)
-n_i          <- 10000   # cohort size (births per year)
+n_i          <- 100000  # cohort size — base-case simulation
+n_i_sa       <- 10000   # cohort size — sensitivity analysis (faster)
 
 v_names_cycles <- paste("cycle", 0:n_cycles)
 v_names_states <- c("NB", "H", "RSV", "D")
