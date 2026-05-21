@@ -59,7 +59,7 @@ print(cea_out$table_cea)
 owsa_nmb <- run_owsa(
   l_params   = l_params,
   output_dir = "./Output",
-  nsamp      = 20,
+  nsamp      = 10,
   n_wtp      = 50000
 )
 
@@ -67,6 +67,6 @@ owsa_nmb <- run_owsa(
 twsa_nmb <- run_twsa(
   l_params   = l_params,
   output_dir = "./Output",
-  nsamp      = 20,
+  nsamp      = 10,
   n_wtp      = 50000
 )
