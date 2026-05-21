@@ -187,8 +187,7 @@ run_base_case(l_alt, vaccine_efficacy_list)
 
 If you use this model in your work, please cite:
 
-> Taleshi J et al. *Cost-effectiveness of infant and maternal RSV immunization
-> strategies in British Columbia, Canada.* (in preparation)
+> Taleshi, Javad, et al. "Cost-effectiveness of infant and maternal RSV immunization strategies, in British Columbia, Canada." Vaccine 68 (2025): 127936.
 
 ## Contact
 
