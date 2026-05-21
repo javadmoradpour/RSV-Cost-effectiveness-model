@@ -372,7 +372,8 @@ Costs <- function(l_params, Tr_t, t, df_X) {
 
 #' Compute per-infant QALYs accrued in the current cycle.
 #'
-#' @param l_params Model parameter list (needs disutility values).
+#' @param l_params Model parameter list (needs disutility values and
+#'   \code{analytic_mort}).
 #' @param M_t      Character vector of current health states.
 #' @param Tr_t     Character vector of treatment types.
 #' @param df_X     Cohort data frame (unused here but kept for API consistency).
@@ -382,6 +383,16 @@ Costs <- function(l_params, Tr_t, t, df_X) {
 #'   states.  Treatment-specific disutilities are subtracted.  Caregiver
 #'   disutility columns are retained in \code{l_params} for optional
 #'   activation.
+#'
+#'   When \code{l_params$analytic_mort = TRUE}, the expected QALY loss from
+#'   death is also subtracted analytically at each cycle:
+#'   \itemize{
+#'     \item Non-inpatient individuals: \code{p_mort × u_rs}
+#'     \item ICU/PW individuals:        \code{p_mort_Inp × u_rs}
+#'   }
+#'   This replaces the end-of-simulation stochastic death penalty in
+#'   \code{MicroSim()} and eliminates all Monte-Carlo noise from this rare
+#'   event, producing smooth sensitivity-analysis curves.
 Effs <- function(l_params, M_t, Tr_t, df_X) {
   with(as.list(l_params), {
     u_t <- numeric(length(M_t))
@@ -391,6 +402,16 @@ Effs <- function(l_params, M_t, Tr_t, df_X) {
     u_t[Tr_t == "PW"]  <- u_t[Tr_t == "PW"]  - Du_PW_Infants
     u_t[Tr_t == "ED"]  <- u_t[Tr_t == "ED"]  - Du_ED_Infants
     u_t[Tr_t == "DV"]  <- u_t[Tr_t == "DV"]  - Du_DV_Infants
+
+    if (isTRUE(analytic_mort)) {
+      # Inpatient (ICU/PW) individuals face elevated mortality
+      inpat <- M_t %in% c("H", "RSV") & Tr_t %in% c("ICU", "PW")
+      u_t[inpat] <- u_t[inpat] - p_mort_Inp * u_rs
+
+      # All other alive individuals face baseline mortality
+      non_inpat <- M_t %in% c("H", "RSV") & !Tr_t %in% c("ICU", "PW")
+      u_t[non_inpat] <- u_t[non_inpat] - p_mort * u_rs
+    }
 
     pmax(u_t, 0)
   })

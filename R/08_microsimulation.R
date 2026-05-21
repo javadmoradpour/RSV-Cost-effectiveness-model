@@ -97,9 +97,14 @@ MicroSim <- function(l_params, vaccine_efficacy_list, df_X, Str, seed,
   tc <- rowSums(m_C)
   te <- rowSums(m_E)
 
-  # Subtract quality-of-life loss from premature death
-  v_du_D <- ifelse(m_M[, n_cycles + 1L] == "D", u_rs, 0)
-  te     <- te - v_du_D
+  # Subtract quality-of-life loss from premature death.
+  # When analytic_mort = TRUE the penalty has already been applied as an
+  # expected value in every cycle inside Effs(), so we skip the stochastic
+  # end-of-simulation adjustment to avoid double-counting.
+  if (!isTRUE(l_params$analytic_mort)) {
+    v_du_D <- ifelse(m_M[, n_cycles + 1L] == "D", u_rs, 0)
+    te     <- te - v_du_D
+  }
 
   if (!full_output) {
     return(list(tc = tc, te = te))
