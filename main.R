@@ -66,7 +66,6 @@ owsa_nmb <- run_owsa(
 # --- 6. Two-way sensitivity analysis ----------------------------------------
 twsa_nmb <- run_twsa(
   l_params   = l_params,
-  n_i_twsa   = 20000L,
   output_dir = "./Output",
   nsamp      = 20,
   n_wtp      = 50000
