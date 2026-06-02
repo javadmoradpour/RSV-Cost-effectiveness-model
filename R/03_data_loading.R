@@ -115,10 +115,13 @@ build_params <- function(data_path = "./Data") {
 
     # Simulation settings carried inside l_params so SA wrappers can
     # override them without touching globals.
-    # n_i_sa is the cohort size used for SA runs (smaller → faster).
-    n_i    = n_i,
-    n_i_sa = n_i_sa,
-    seed   = seed,
+    # n_i_sa / n_sim_sa are the smaller SA-run sizes.
+    # rsvpref_start_month controls when RSVpreF is offered (default = RSV
+    # season start); change this independently to test different roll-out dates.
+    n_i                 = n_i,
+    n_i_sa              = n_i_sa,
+    seed                = seed,
+    rsvpref_start_month = rsvpref_start_month,
 
     # When analytic_mort = TRUE, Effs() subtracts the *expected* QALY penalty
     # from death at every cycle (p_mort * u_rs for non-inpatient individuals,
