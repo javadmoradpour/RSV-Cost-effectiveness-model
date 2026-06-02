@@ -73,40 +73,42 @@ Nirsevimab_HighRisk_WithCatchup <- function(df_X, coverage_nirsevimab_HighRisk,
 }
 
 
-#' Nirsevimab for moderate-risk infants with catch-up at RSV-season start.
+#' Nirsevimab for moderate-risk infants born during the RSV season (no catch-up).
+#'
+#' Only infants born after the RSV season starts are vaccinated at birth.
+#' Pre-season births are not caught up; catch-up is reserved for high-risk
+#' infants only.
 #'
 #' @param df_X                           Cohort data frame.
 #' @param coverage_nirsevimab_ModerateRisk Uptake proportion.
 #' @return Modified cohort data frame.
-Nirsevimab_ModerateRisk_WithCatchup <- function(df_X,
-                                                 coverage_nirsevimab_ModerateRisk) {
+Nirsevimab_ModerateRisk_InSeason <- function(df_X,
+                                              coverage_nirsevimab_ModerateRisk) {
   eligible <- df_X$Risk == "ModerateRisk" &
     is.na(df_X$RSVpreF_Month) &
+    df_X$MonthBorn > sim_to_rsv_month_gap &
     runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
 
-  df_X$nirsevimab_Month[eligible] <- ifelse(
-    df_X$MonthBorn[eligible] <= sim_to_rsv_month_gap,
-    sim_to_rsv_month_gap + 1L,
-    df_X$MonthBorn[eligible]
-  )
+  df_X$nirsevimab_Month[eligible] <- df_X$MonthBorn[eligible]
   df_X
 }
 
 
-#' Nirsevimab for all low- and moderate-risk infants (universal catch-up).
+#' Nirsevimab for moderate- and low-risk infants born during the RSV season.
+#'
+#' No catch-up for pre-season births; only in-season births are vaccinated.
+#' High-risk infants (who do receive catch-up) are handled separately by
+#' \code{Nirsevimab_HighRisk_WithCatchup()}.
 #'
 #' @param df_X                           Cohort data frame.
 #' @param coverage_nirsevimab_ModerateRisk Uptake proportion.
 #' @return Modified cohort data frame.
-Nirsevimab_WithCatchup <- function(df_X, coverage_nirsevimab_ModerateRisk) {
+Nirsevimab_ModLow_InSeason <- function(df_X, coverage_nirsevimab_ModerateRisk) {
   eligible <- df_X$Risk %in% c("ModerateRisk", "LowRisk") &
+    df_X$MonthBorn > sim_to_rsv_month_gap &
     runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
 
-  df_X$nirsevimab_Month[eligible] <- ifelse(
-    df_X$MonthBorn[eligible] <= sim_to_rsv_month_gap,
-    sim_to_rsv_month_gap + 1L,
-    df_X$MonthBorn[eligible]
-  )
+  df_X$nirsevimab_Month[eligible] <- df_X$MonthBorn[eligible]
   df_X
 }
 
@@ -155,7 +157,7 @@ apply_strategy <- function(df_X, Str, l_params) {
     "Nirsevimab (High & Mod)" = function(df) {
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
-      Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
+      Nirsevimab_ModerateRisk_InSeason(df, nirs_mod)
     },
 
     "RSVpreF" = function(df) {
@@ -171,13 +173,13 @@ apply_strategy <- function(df_X, Str, l_params) {
       df <- RSVpreF_RSVSeason(df, rsvf_cov)
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
-      Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
+      Nirsevimab_ModerateRisk_InSeason(df, nirs_mod)
     },
 
     "Nirsevimab (Universal)" = function(df) {
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
-      Nirsevimab_WithCatchup(df, nirs_mod)
+      Nirsevimab_ModLow_InSeason(df, nirs_mod)
     }
   )
 

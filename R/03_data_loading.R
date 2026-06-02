@@ -49,6 +49,7 @@ build_params <- function(data_path = "./Data") {
     # Simulation settings
     base_str = "No Intervention",
     n_sim    = n_sim,
+    n_sim_sa = n_sim_sa,
 
     # Population
     v_risk_prob             = v_risk_prob,
