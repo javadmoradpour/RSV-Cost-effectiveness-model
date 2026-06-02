@@ -170,9 +170,8 @@ build_sa_ranges <- function(l_params) {
 #' @param nsamp       Number of parameter values sampled per parameter.
 #' @param n_wtp       Willingness-to-pay threshold ($/QALY).
 #' @param n_sim_sa    Replications used for each OWSA model evaluation.
-#'   Defaults to \code{l_params$n_sim}.  Increasing this (e.g. to 50–100)
-#'   reduces Monte-Carlo noise in the sensitivity curves at the cost of longer
-#'   run times.
+#'   Defaults to \code{l_params$n_sim_sa} (separate from the base-case
+#'   \code{n_sim}).  Increase if SA curves still appear noisy.
 #' @param n_i_sa      Cohort size used for each OWSA evaluation.  Defaults to
 #'   \code{l_params$n_i}.
 #' @param analytic_mort Logical (default \code{TRUE}).  When \code{TRUE},
@@ -184,7 +183,7 @@ build_sa_ranges <- function(l_params) {
 #' @return The \code{owsa_nmb} object returned by \code{run_owsa_det()}.
 run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
                      n_wtp = 50000,
-                     n_sim_sa      = l_params$n_sim,
+                     n_sim_sa      = l_params$n_sim_sa,
                      n_i_sa        = l_params$n_i_sa,
                      analytic_mort = TRUE) {
 

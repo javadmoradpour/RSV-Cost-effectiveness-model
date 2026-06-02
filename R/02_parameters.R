@@ -39,13 +39,14 @@ v_names_str <- c(
 n_str <- length(v_names_str)
 
 # --- Simulation replications ---
-n_sim <- 10   # Monte Carlo iterations for base case
-seed  <- 100
+n_sim    <- 25  # Monte Carlo iterations for base case
+n_sim_sa <- 5   # Monte Carlo iterations for sensitivity analysis (faster)
+seed     <- 100
 
 # --- RSV season timing (calendar months) ---
-sim_start_month        <- 5   # simulation starts in May
-rsv_season_start_month <- 11  # RSV season begins in November
-sim_to_rsv_month_gap   <- rsv_season_start_month - sim_start_month  # = 6
+sim_start_month        <- 4   # simulation starts in April
+rsv_season_start_month <- 9   # RSV season begins in September
+sim_to_rsv_month_gap   <- rsv_season_start_month - sim_start_month  # = 5
 
 # --- Outpatient visit probabilities by age group (proportion of RSV cases) ---
 # First 6 months, months 7-12, months 13-24
