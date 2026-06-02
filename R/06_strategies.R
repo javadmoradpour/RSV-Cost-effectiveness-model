@@ -113,15 +113,21 @@ Nirsevimab_ModLow_InSeason <- function(df_X, coverage_nirsevimab_ModerateRisk) {
 }
 
 
-#' RSVpreF maternal vaccine for mothers of moderate- and low-risk infants
-#' born during the RSV season.
+#' RSVpreF maternal vaccine for infants born on or after the RSVpreF offer date.
+#'
+#' The offer window is controlled by \code{rsvpref_gap} (cycles from simulation
+#' start to the first month RSVpreF is offered).  By default this equals
+#' \code{sim_to_rsv_month_gap} (RSV season start), but it can differ when
+#' \code{l_params$rsvpref_start_month} is changed independently.
 #'
 #' @param df_X            Cohort data frame.
 #' @param coverage_RSVpreF Uptake proportion.
+#' @param rsvpref_gap     Number of cycles from simulation start before RSVpreF
+#'   is offered (\code{rsvpref_start_month - sim_start_month}).
 #' @return Modified cohort data frame.
-RSVpreF_RSVSeason <- function(df_X, coverage_RSVpreF) {
+RSVpreF_RSVSeason <- function(df_X, coverage_RSVpreF, rsvpref_gap) {
   eligible <- df_X$Risk %in% c("ModerateRisk", "LowRisk") &
-    df_X$MonthBorn > sim_to_rsv_month_gap &
+    df_X$MonthBorn > rsvpref_gap &
     runif(nrow(df_X)) <= coverage_RSVpreF
 
   df_X$RSVpreF_Month[eligible] <- df_X$MonthBorn[eligible]
@@ -143,9 +149,10 @@ RSVpreF_RSVSeason <- function(df_X, coverage_RSVpreF) {
 #'   without relying on global state.  Add new strategies by extending the
 #'   \code{strategy_fns} list.
 apply_strategy <- function(df_X, Str, l_params) {
-  pvz_y2   <- l_params$coverage_palivizumab_y2
-  nirs_mod <- l_params$coverage_nirsevimab_ModerateRisk
-  rsvf_cov <- l_params$coverage_RSVpreF
+  pvz_y2      <- l_params$coverage_palivizumab_y2
+  nirs_mod    <- l_params$coverage_nirsevimab_ModerateRisk
+  rsvf_cov    <- l_params$coverage_RSVpreF
+  rsvpref_gap <- l_params$rsvpref_start_month - sim_start_month
 
   strategy_fns <- list(
     "No Intervention" = function(df) df,
@@ -161,16 +168,16 @@ apply_strategy <- function(df_X, Str, l_params) {
     },
 
     "RSVpreF" = function(df) {
-      RSVpreF_RSVSeason(df, rsvf_cov)
+      RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
     },
 
     "RSVpreF + Nirsevimab (High)" = function(df) {
-      df <- RSVpreF_RSVSeason(df, rsvf_cov)
+      df <- RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
       Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk, pvz_y2)
     },
 
     "RSVpreF + Nirsevimab (High & Mod)" = function(df) {
-      df <- RSVpreF_RSVSeason(df, rsvf_cov)
+      df <- RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
       Nirsevimab_ModerateRisk_InSeason(df, nirs_mod)
