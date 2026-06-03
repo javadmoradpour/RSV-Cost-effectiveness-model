@@ -237,15 +237,7 @@ run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
     PD_PW                             = "Ward cost per day"
   )
 
-  nice_strats <- c(
-    `No.Intervention`                   = "No Intervention",
-    `Palivizumab`                       = "Palivizumab",
-    `Nirsevimab..High...Mod.`           = "Nirsevimab (High & Mod)",
-    `RSVpreF`                           = "RSVpreF",
-    `RSVpreF...Nirsevimab..High.`       = "RSVpreF + Nirsevimab (High)",
-    `RSVpreF...Nirsevimab..High...Mod.` = "RSVpreF + Nirsevimab (High & Mod)",
-    `Nirsevimab..Universal.`            = "Nirsevimab (Universal)"
-  )
+  nice_strats <- setNames(v_names_str, make.names(v_names_str))
 
   owsa_nice <- owsa_nmb %>%
     mutate(
@@ -322,15 +314,7 @@ run_twsa <- function(l_params, n_i_twsa = l_params$n_i_sa, output_dir = "./Outpu
     n_wtp           = n_wtp
   )
 
-  nice_strats_twsa <- c(
-    `No.Intervention`                   = "No Intervention",
-    `Palivizumab`                       = "Palivizumab",
-    `Nirsevimab..High...Mod.`           = "Nirsevimab (High & Mod)",
-    `RSVpreF`                           = "RSVpreF",
-    `RSVpreF...Nirsevimab..High.`       = "RSVpreF + Nirsevimab (High)",
-    `RSVpreF...Nirsevimab..High...Mod.` = "RSVpreF + Nirsevimab (High & Mod)",
-    `Nirsevimab..Universal.`            = "Nirsevimab (Universal)"
-  )
+  nice_strats_twsa <- setNames(v_names_str, make.names(v_names_str))
 
   twsa_nice <- twsa_nmb %>%
     mutate(strategy = factor(strategy,
