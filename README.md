@@ -30,12 +30,6 @@ British Columbia, Canada."**
 | 7 | Nirsevimab (All, Low In-Season) |
 | 8 | RSVpreF + Nirsevimab (All, Low In-Season) |
 
-**Key findings:** Nirsevimab for high- and moderate-risk infants (Strategy 3)
-is the most cost-effective option at a $50,000/QALY threshold. The combined
-RSVpreF + nirsevimab strategy (Strategy 6) offers greater health benefits but
-at an incremental cost of ~$119K/QALY vs. Strategy 3; when compared directly
-to palivizumab, Strategy 6 is cost-effective at ~$18K/QALY.
-
 ---
 
 ## Model structure
