@@ -10,7 +10,7 @@
 #' @param results_table Data frame returned by \code{run_base_case()}.
 #' @param output_dir    Directory for PNG output.
 #' @return A list with \code{df_cea} (raw dampack ICER table) and
-#'   \code{table_cea} (formatted table).
+#'   \code{table_cea} (formatted table with vaccine cost columns appended).
 run_cea <- function(results_table, output_dir = "./Output") {
   df_cea <- calculate_icers(
     cost       = results_table$Total_Cost,
@@ -19,6 +19,12 @@ run_cea <- function(results_table, output_dir = "./Output") {
   )
 
   table_cea <- format_table_cea(df_cea)
+
+  # Append vaccine cost breakdown from results_table
+  vac_cols  <- results_table[, c("Strategy", "Vaccine_Cost",
+                                  "Palivizumab_Cost", "Nirsevimab_Cost",
+                                  "RSVpreF_Cost")]
+  table_cea <- merge(table_cea, vac_cols, by = "Strategy", all.x = TRUE)
 
   icer_plot <- plot(df_cea, label = "all", txtsize = 14) +
     expand_limits(x = max(table_cea$QALYs) + 0.1) +
