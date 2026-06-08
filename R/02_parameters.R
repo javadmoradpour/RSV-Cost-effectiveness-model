@@ -53,7 +53,7 @@ sim_to_rsv_month_gap   <- rsv_season_start_month - sim_start_month  # = 5
 # The month from which RSVpreF is offered to mothers.  Defaults to the RSV
 # season start but can be set independently to evaluate scenarios where the
 # vaccine programme opens earlier or later than the RSV season itself.
-rsvpref_start_month <- rsv_season_start_month  # default = RSV season start (9)
+rsvpref_start_month <- 11  # default = November
 
 # --- Outpatient visit probabilities by age group (proportion of RSV cases) ---
 # First 6 months, months 7-12, months 13-24
