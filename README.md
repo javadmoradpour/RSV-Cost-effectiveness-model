@@ -22,11 +22,11 @@ British Columbia, Canada."**
 | # | Strategy |
 |---|----------|
 | 1 | No Intervention |
-| 2 | Palivizumab (historical standard of care) |
-| 3 | Nirsevimab — high- and moderate-risk infants (with catch-up) |
-| 4 | RSVpreF maternal vaccine only |
-| 5 | RSVpreF + nirsevimab (high-risk infants) |
-| 6 | RSVpreF + nirsevimab (high- and moderate-risk infants) |
+| 2 | Palivizumab |
+| 3 | Nirsevimab (High & Mod) |
+| 4 | RSVpreF |
+| 5 | RSVpreF + Nirsevimab (High) |
+| 6 | RSVpreF + Nirsevimab (High & Mod) |
 | 7 | Nirsevimab (All, Low In-Season) |
 | 8 | RSVpreF + Nirsevimab (All, Low In-Season) |
 
