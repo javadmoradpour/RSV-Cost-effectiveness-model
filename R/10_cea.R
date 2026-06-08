@@ -26,6 +26,12 @@ run_cea <- function(results_table, output_dir = "./Output") {
                                   "RSVpreF_Cost")]
   table_cea <- merge(table_cea, vac_cols, by = "Strategy", all.x = TRUE)
 
+  # Reorder rows: non-dominated strategies first (in cost order, matching the
+  # sequential CEA frontier), then dominated/extended-dominated at the end.
+  nd_strats  <- df_cea$Strategy[df_cea$Status == "ND"]
+  dom_strats <- df_cea$Strategy[df_cea$Status != "ND"]
+  table_cea  <- table_cea[match(c(nd_strats, dom_strats), table_cea$Strategy), ]
+
   icer_plot <- plot(df_cea, label = "all", txtsize = 14) +
     expand_limits(x = max(table_cea$QALYs) + 0.1) +
     theme(legend.position = c(0.15, 0.85))
