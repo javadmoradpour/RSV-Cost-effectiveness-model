@@ -23,11 +23,12 @@ British Columbia, Canada."**
 |---|----------|
 | 1 | No Intervention |
 | 2 | Palivizumab (historical standard of care) |
-| 3 | Nirsevimab — high- and moderate-risk infants |
+| 3 | Nirsevimab — high- and moderate-risk infants (with catch-up) |
 | 4 | RSVpreF maternal vaccine only |
 | 5 | RSVpreF + nirsevimab (high-risk infants) |
 | 6 | RSVpreF + nirsevimab (high- and moderate-risk infants) |
-| 7 | Nirsevimab — all infants (universal) |
+| 7 | Nirsevimab — all infants; low-risk in-season births only (no catch-up) |
+| 8 | RSVpreF + nirsevimab (all infants); low-risk in-season births only, no catch-up, not RSVpreF-protected |
 
 **Key findings:** Nirsevimab for high- and moderate-risk infants (Strategy 3)
 is the most cost-effective option at a $50,000/QALY threshold. The combined

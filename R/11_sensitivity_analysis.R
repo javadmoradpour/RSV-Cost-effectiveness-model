@@ -262,7 +262,8 @@ run_owsa <- function(l_params, output_dir = "./Output", nsamp = 20,
          p_owsa_all, width = 12, height = 8, dpi = 500)
 
   p_owsa_excl <- owsa_nice %>%
-    filter(strategy != "Nirsevimab (Universal)") %>%
+    filter(!strategy %in% c("Nirsevimab (All, Low In-Season)",
+                            "RSVpreF + Nirsevimab (All, Low In-Season)")) %>%
     droplevels() %>%
     plot(txtsize = 11, n_x_ticks = 5, facet_scales = "free") +
     labs(y = "E[NMB]", x = "Parameter value") +
@@ -324,13 +325,14 @@ run_twsa <- function(l_params, n_i_twsa = l_params$n_i_sa, output_dir = "./Outpu
 
   p_twsa <- plot(twsa_nice, txtsize = 12, facet_scales = "free") +
     scale_fill_manual(values = c(
-      "No Intervention"                   = "#999999",
-      "Palivizumab"                       = "#000000",
-      "RSVpreF"                           = "#0072B2",
-      "Nirsevimab (High & Mod)"           = "#E69F00",
-      "RSVpreF + Nirsevimab (High)"       = "#56B4E9",
-      "RSVpreF + Nirsevimab (High & Mod)" = "#009E73",
-      "Nirsevimab (Universal)"            = "#F0E442"
+      "No Intervention"                          = "#999999",
+      "Palivizumab"                              = "#000000",
+      "RSVpreF"                                  = "#0072B2",
+      "Nirsevimab (High & Mod)"                  = "#E69F00",
+      "RSVpreF + Nirsevimab (High)"              = "#56B4E9",
+      "RSVpreF + Nirsevimab (High & Mod)"        = "#009E73",
+      "Nirsevimab (All, Low In-Season)"          = "#F0E442",
+      "RSVpreF + Nirsevimab (All, Low In-Season)"= "#CC79A7"
     )) +
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
     theme(legend.text = element_text(size = 10))
