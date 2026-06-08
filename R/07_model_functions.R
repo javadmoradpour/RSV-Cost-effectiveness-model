@@ -313,9 +313,10 @@ treatment_type <- function(vaccine_efficacy_list, l_params, M_t, t, df_X) {
 #' @param t        Integer cycle index (used to identify vaccine administration
 #'   months).
 #' @param df_X     Cohort data frame.
-#' @return A list with three numeric vectors of length \code{nrow(df_X)}:
+#' @return A list with numeric vectors of length \code{nrow(df_X)}:
 #'   \code{c_t} (total), \code{c_inpat} (inpatient only), \code{c_vac}
-#'   (vaccine only).
+#'   (all vaccine costs combined), \code{c_vac_pvz} (palivizumab),
+#'   \code{c_vac_nirs} (nirsevimab), \code{c_vac_rsvf} (RSVpreF).
 Costs <- function(l_params, Tr_t, t, df_X) {
   with(as.list(l_params), {
     n <- length(Tr_t)
@@ -361,9 +362,17 @@ Costs <- function(l_params, Tr_t, t, df_X) {
     vac_rsvf  <- ifelse(!is.na(df_X$RSVpreF_Month) &
                           df_X$RSVpreF_Month == t,
                         c_RSVpreF + c_Admin_vac, 0)
-    c_vac <- vac_pvz1 + vac_pvz2 + vac_nirs1 + vac_nirs2 + vac_rsvf
+    c_vac_pvz  <- vac_pvz1  + vac_pvz2
+    c_vac_nirs <- vac_nirs1 + vac_nirs2
+    c_vac_rsvf <- vac_rsvf
+    c_vac      <- c_vac_pvz + c_vac_nirs + c_vac_rsvf
 
-    list(c_t = c_inpat + c_outpat + c_vac, c_inpat = c_inpat, c_vac = c_vac)
+    list(c_t       = c_inpat + c_outpat + c_vac,
+         c_inpat   = c_inpat,
+         c_vac     = c_vac,
+         c_vac_pvz = c_vac_pvz,
+         c_vac_nirs= c_vac_nirs,
+         c_vac_rsvf= c_vac_rsvf)
   })
 }
 

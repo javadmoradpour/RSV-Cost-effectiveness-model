@@ -28,6 +28,8 @@
 #'     \item{te}{Numeric vector of per-person QALYs.}
 #'     \item{tc_vac, tc_inpat}{Disaggregated cost vectors (only when
 #'       \code{full_output = TRUE}).}
+#'     \item{tc_vac_pvz, tc_vac_nirs, tc_vac_rsvf}{Per-vaccine cost vectors
+#'       (palivizumab, nirsevimab, RSVpreF; only when \code{full_output = TRUE}).}
 #'     \item{ICU_count, PW_count, ED_count, DV_count, D_count}{Aggregate
 #'       treatment/death counts across the cohort and all cycles (only when
 #'       \code{full_output = TRUE}).}
@@ -58,10 +60,16 @@ MicroSim <- function(l_params, vaccine_efficacy_list, df_X, Str, seed,
                  dimnames = list(row_names, col_names))
 
   if (full_output) {
-    m_C_vac   <- matrix(0, n_i, n_cycles + 1L,
-                        dimnames = list(row_names, col_names))
-    m_C_inpat <- matrix(0, n_i, n_cycles + 1L,
-                        dimnames = list(row_names, col_names))
+    m_C_vac      <- matrix(0, n_i, n_cycles + 1L,
+                           dimnames = list(row_names, col_names))
+    m_C_inpat    <- matrix(0, n_i, n_cycles + 1L,
+                           dimnames = list(row_names, col_names))
+    m_C_vac_pvz  <- matrix(0, n_i, n_cycles + 1L,
+                           dimnames = list(row_names, col_names))
+    m_C_vac_nirs <- matrix(0, n_i, n_cycles + 1L,
+                           dimnames = list(row_names, col_names))
+    m_C_vac_rsvf <- matrix(0, n_i, n_cycles + 1L,
+                           dimnames = list(row_names, col_names))
   }
 
   # Initialise cycle 0
@@ -72,8 +80,11 @@ MicroSim <- function(l_params, vaccine_efficacy_list, df_X, Str, seed,
   m_C[, 1L]  <- cost_0$c_t
   m_E[, 1L]  <- Effs(l_params, m_M[, 1L], m_Tr[, 1L], df_X)
   if (full_output) {
-    m_C_vac[, 1L]   <- cost_0$c_vac
-    m_C_inpat[, 1L] <- cost_0$c_inpat
+    m_C_vac[, 1L]      <- cost_0$c_vac
+    m_C_inpat[, 1L]    <- cost_0$c_inpat
+    m_C_vac_pvz[, 1L]  <- cost_0$c_vac_pvz
+    m_C_vac_nirs[, 1L] <- cost_0$c_vac_nirs
+    m_C_vac_rsvf[, 1L] <- cost_0$c_vac_rsvf
   }
 
   set.seed(seed + 1L)
@@ -89,8 +100,11 @@ MicroSim <- function(l_params, vaccine_efficacy_list, df_X, Str, seed,
     m_E[, t + 1L]  <- Effs(l_params, m_M[, t + 1L], m_Tr[, t + 1L], df_X)
 
     if (full_output) {
-      m_C_vac[, t + 1L]   <- cost_t$c_vac
-      m_C_inpat[, t + 1L] <- cost_t$c_inpat
+      m_C_vac[, t + 1L]      <- cost_t$c_vac
+      m_C_inpat[, t + 1L]    <- cost_t$c_inpat
+      m_C_vac_pvz[, t + 1L]  <- cost_t$c_vac_pvz
+      m_C_vac_nirs[, t + 1L] <- cost_t$c_vac_nirs
+      m_C_vac_rsvf[, t + 1L] <- cost_t$c_vac_rsvf
     }
   }
 
@@ -115,10 +129,13 @@ MicroSim <- function(l_params, vaccine_efficacy_list, df_X, Str, seed,
                             levels = v_names_treatments))
 
   list(
-    tc        = tc,
-    tc_vac    = rowSums(m_C_vac),
-    tc_inpat  = rowSums(m_C_inpat),
-    te        = te,
+    tc           = tc,
+    tc_vac       = rowSums(m_C_vac),
+    tc_inpat     = rowSums(m_C_inpat),
+    tc_vac_pvz   = rowSums(m_C_vac_pvz),
+    tc_vac_nirs  = rowSums(m_C_vac_nirs),
+    tc_vac_rsvf  = rowSums(m_C_vac_rsvf),
+    te           = te,
     ICU_count = as.integer(tr_counts["ICU"]),
     PW_count  = as.integer(tr_counts["PW"]),
     ED_count  = as.integer(tr_counts["ED"]),

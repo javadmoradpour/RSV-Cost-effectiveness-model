@@ -25,6 +25,7 @@ run_base_case <- function(l_params, vaccine_efficacy_list,
 
   acc <- function() setNames(numeric(n_str), v_names_str)
   v_tot_cost   <- acc(); v_vac_cost   <- acc(); v_inpat_cost <- acc()
+  v_pvz_cost   <- acc(); v_nirs_cost  <- acc(); v_rsvf_cost  <- acc()
   v_tot_qaly   <- acc(); v_ave_cost   <- acc(); v_ave_qaly   <- acc()
   v_ICU_count  <- acc(); v_PW_count   <- acc(); v_ED_count   <- acc()
   v_DV_count   <- acc(); v_D_count    <- acc()
@@ -44,9 +45,12 @@ run_base_case <- function(l_params, vaccine_efficacy_list,
                          v_names_str[i], seed_run + j * 10L,
                          full_output = TRUE)
         inv_n <- 1 / n_sim_run
-        v_tot_cost[i]  <- v_tot_cost[i]   + sum(out$tc)       * inv_n
-        v_vac_cost[i]  <- v_vac_cost[i]   + sum(out$tc_vac)   * inv_n
-        v_inpat_cost[i]<- v_inpat_cost[i] + sum(out$tc_inpat) * inv_n
+        v_tot_cost[i]  <- v_tot_cost[i]   + sum(out$tc)          * inv_n
+        v_vac_cost[i]  <- v_vac_cost[i]   + sum(out$tc_vac)      * inv_n
+        v_inpat_cost[i]<- v_inpat_cost[i] + sum(out$tc_inpat)    * inv_n
+        v_pvz_cost[i]  <- v_pvz_cost[i]   + sum(out$tc_vac_pvz)  * inv_n
+        v_nirs_cost[i] <- v_nirs_cost[i]  + sum(out$tc_vac_nirs) * inv_n
+        v_rsvf_cost[i] <- v_rsvf_cost[i]  + sum(out$tc_vac_rsvf) * inv_n
         v_tot_qaly[i]  <- v_tot_qaly[i]   + sum(out$te)       * inv_n
         v_ave_cost[i]  <- v_ave_cost[i]   + mean(out$tc)      * inv_n
         v_ave_qaly[i]  <- v_ave_qaly[i]   + mean(out$te)      * inv_n
@@ -65,10 +69,13 @@ run_base_case <- function(l_params, vaccine_efficacy_list,
   base_qaly <- v_tot_qaly[l_params$base_str]
 
   results_table <- data.frame(
-    Strategy        = v_names_str,
-    Total_Cost      = as.numeric(v_tot_cost),
-    Vaccine_Cost    = as.numeric(v_vac_cost),
-    Inpatient_Cost  = as.numeric(v_inpat_cost),
+    Strategy           = v_names_str,
+    Total_Cost         = as.numeric(v_tot_cost),
+    Vaccine_Cost       = as.numeric(v_vac_cost),
+    Palivizumab_Cost   = as.numeric(v_pvz_cost),
+    Nirsevimab_Cost    = as.numeric(v_nirs_cost),
+    RSVpreF_Cost       = as.numeric(v_rsvf_cost),
+    Inpatient_Cost     = as.numeric(v_inpat_cost),
     ICU_Count       = as.numeric(v_ICU_count),
     PW_Count        = as.numeric(v_PW_count),
     ED_Count        = as.numeric(v_ED_count),
