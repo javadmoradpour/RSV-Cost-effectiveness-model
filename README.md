@@ -27,8 +27,8 @@ British Columbia, Canada."**
 | 4 | RSVpreF maternal vaccine only |
 | 5 | RSVpreF + nirsevimab (high-risk infants) |
 | 6 | RSVpreF + nirsevimab (high- and moderate-risk infants) |
-| 7 | Nirsevimab — all infants; low-risk in-season births only (no catch-up) |
-| 8 | RSVpreF + nirsevimab (all infants); low-risk in-season births only, no catch-up, not RSVpreF-protected |
+| 7 | Nirsevimab (All, Low In-Season) |
+| 8 | RSVpreF + Nirsevimab (All, Low In-Season) |
 
 **Key findings:** Nirsevimab for high- and moderate-risk infants (Strategy 3)
 is the most cost-effective option at a $50,000/QALY threshold. The combined
