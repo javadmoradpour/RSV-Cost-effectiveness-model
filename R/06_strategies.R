@@ -81,18 +81,50 @@ Nirsevimab_HighRisk_WithCatchup <- function(df_X, coverage_nirsevimab_HighRisk,
 #'
 #' @param df_X                           Cohort data frame.
 #' @param coverage_nirsevimab_ModerateRisk Uptake proportion.
+#' @param coverage_RSVpreF Optional. When provided together with
+#'   \code{rsvpref_gap}, the nirsevimab probability for infants born inside the
+#'   RSVpreF offering window is adjusted so that total coverage (RSVpreF +
+#'   nirsevimab) does not exceed \code{coverage_nirsevimab_ModerateRisk}.
+#' @param rsvpref_gap Optional. Cycles from simulation start before RSVpreF is
+#'   offered; used together with \code{coverage_RSVpreF} to split the cohort
+#'   into overlap and non-overlap months.
 #' @return Modified cohort data frame.
 Nirsevimab_ModerateRisk_WithCatchup <- function(df_X,
-                                                 coverage_nirsevimab_ModerateRisk) {
-  eligible <- df_X$Risk == "ModerateRisk" &
-    is.na(df_X$RSVpreF_Month) &
-    runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
-
-  df_X$nirsevimab_Month[eligible] <- ifelse(
-    df_X$MonthBorn[eligible] <= sim_to_rsv_month_gap,
-    sim_to_rsv_month_gap + 1L,
-    df_X$MonthBorn[eligible]
-  )
+                                                 coverage_nirsevimab_ModerateRisk,
+                                                 coverage_RSVpreF = NULL,
+                                                 rsvpref_gap = NULL) {
+  if (is.null(coverage_RSVpreF) || is.null(rsvpref_gap)) {
+    # Original behaviour: no cap
+    eligible <- df_X$Risk == "ModerateRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
+    df_X$nirsevimab_Month[eligible] <- ifelse(
+      df_X$MonthBorn[eligible] <= sim_to_rsv_month_gap,
+      sim_to_rsv_month_gap + 1L,
+      df_X$MonthBorn[eligible]
+    )
+  } else {
+    # Capped: split cohort into non-overlap and overlap birth months.
+    # Non-overlap (born before RSVpreF window): full probability.
+    elig_pre <- df_X$Risk == "ModerateRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      df_X$MonthBorn <= rsvpref_gap &
+      runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
+    df_X$nirsevimab_Month[elig_pre] <- ifelse(
+      df_X$MonthBorn[elig_pre] <= sim_to_rsv_month_gap,
+      sim_to_rsv_month_gap + 1L,
+      df_X$MonthBorn[elig_pre]
+    )
+    # Overlap (born inside RSVpreF window): adjusted probability so that
+    # total coverage (RSVpreF + nirsevimab) = coverage_nirsevimab_ModerateRisk.
+    p_adj   <- max(0, (coverage_nirsevimab_ModerateRisk - coverage_RSVpreF) /
+                        (1 - coverage_RSVpreF))
+    elig_ov <- df_X$Risk == "ModerateRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      df_X$MonthBorn > rsvpref_gap &
+      runif(nrow(df_X)) <= p_adj
+    df_X$nirsevimab_Month[elig_ov] <- df_X$MonthBorn[elig_ov]
+  }
   df_X
 }
 
@@ -105,14 +137,36 @@ Nirsevimab_ModerateRisk_WithCatchup <- function(df_X,
 #'
 #' @param df_X                           Cohort data frame.
 #' @param coverage_nirsevimab_ModerateRisk Uptake proportion.
+#' @param coverage_RSVpreF Optional. See \code{Nirsevimab_ModerateRisk_WithCatchup}.
+#' @param rsvpref_gap Optional. See \code{Nirsevimab_ModerateRisk_WithCatchup}.
 #' @return Modified cohort data frame.
-Nirsevimab_LowRisk_InSeason <- function(df_X, coverage_nirsevimab_ModerateRisk) {
-  eligible <- df_X$Risk == "LowRisk" &
-    is.na(df_X$RSVpreF_Month) &
-    df_X$MonthBorn > sim_to_rsv_month_gap &
-    runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
-
-  df_X$nirsevimab_Month[eligible] <- df_X$MonthBorn[eligible]
+Nirsevimab_LowRisk_InSeason <- function(df_X, coverage_nirsevimab_ModerateRisk,
+                                         coverage_RSVpreF = NULL,
+                                         rsvpref_gap = NULL) {
+  if (is.null(coverage_RSVpreF) || is.null(rsvpref_gap)) {
+    # Original behaviour: no cap
+    eligible <- df_X$Risk == "LowRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      df_X$MonthBorn > sim_to_rsv_month_gap &
+      runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
+    df_X$nirsevimab_Month[eligible] <- df_X$MonthBorn[eligible]
+  } else {
+    # Capped: non-overlap in-season months use full probability.
+    elig_pre <- df_X$Risk == "LowRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      df_X$MonthBorn > sim_to_rsv_month_gap &
+      df_X$MonthBorn <= rsvpref_gap &
+      runif(nrow(df_X)) <= coverage_nirsevimab_ModerateRisk
+    df_X$nirsevimab_Month[elig_pre] <- df_X$MonthBorn[elig_pre]
+    # Overlap in-season months: adjusted probability.
+    p_adj   <- max(0, (coverage_nirsevimab_ModerateRisk - coverage_RSVpreF) /
+                        (1 - coverage_RSVpreF))
+    elig_ov <- df_X$Risk == "LowRisk" &
+      is.na(df_X$RSVpreF_Month) &
+      df_X$MonthBorn > rsvpref_gap &
+      runif(nrow(df_X)) <= p_adj
+    df_X$nirsevimab_Month[elig_ov] <- df_X$MonthBorn[elig_ov]
+  }
   df_X
 }
 
@@ -184,7 +238,7 @@ apply_strategy <- function(df_X, Str, l_params) {
       df <- RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
-      Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
+      Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod, rsvf_cov, rsvpref_gap)
     },
 
     "Nirsevimab (High, Mod & Low In-Season)" = function(df) {
@@ -198,8 +252,8 @@ apply_strategy <- function(df_X, Str, l_params) {
       df <- RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
-      df <- Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
-      Nirsevimab_LowRisk_InSeason(df, nirs_mod)
+      df <- Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod, rsvf_cov, rsvpref_gap)
+      Nirsevimab_LowRisk_InSeason(df, nirs_mod, rsvf_cov, rsvpref_gap)
     }
   )
 
