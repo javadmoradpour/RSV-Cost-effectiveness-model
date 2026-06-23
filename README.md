@@ -27,8 +27,8 @@ British Columbia, Canada."**
 | 4 | RSVpreF |
 | 5 | RSVpreF + Nirsevimab (High) |
 | 6 | RSVpreF + Nirsevimab (High & Mod) |
-| 7 | Nirsevimab (All, Low In-Season) |
-| 8 | RSVpreF + Nirsevimab (All, Low In-Season) |
+| 7 | Nirsevimab (High, Mod & Low In-Season) |
+| 8 | RSVpreF + Nirsevimab (High, Mod & Low In-Season) |
 
 ---
 
