@@ -187,14 +187,14 @@ apply_strategy <- function(df_X, Str, l_params) {
       Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
     },
 
-    "Nirsevimab (All, Low In-Season)" = function(df) {
+    "Nirsevimab (High, Mod & Low In-Season)" = function(df) {
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)
       df <- Nirsevimab_ModerateRisk_WithCatchup(df, nirs_mod)
       Nirsevimab_LowRisk_InSeason(df, nirs_mod)
     },
 
-    "RSVpreF + Nirsevimab (All, Low In-Season)" = function(df) {
+    "RSVpreF + Nirsevimab (High, Mod & Low In-Season)" = function(df) {
       df <- RSVpreF_RSVSeason(df, rsvf_cov, rsvpref_gap)
       df <- Nirsevimab_HighRisk_WithCatchup(df, coverage_nirsevimab_HighRisk,
                                             pvz_y2)

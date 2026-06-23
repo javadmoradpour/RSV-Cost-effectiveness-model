@@ -34,8 +34,8 @@ v_names_str <- c(
   "RSVpreF",
   "RSVpreF + Nirsevimab (High)",
   "RSVpreF + Nirsevimab (High & Mod)",
-  "Nirsevimab (All, Low In-Season)",
-  "RSVpreF + Nirsevimab (All, Low In-Season)"
+  "Nirsevimab (High, Mod & Low In-Season)",
+  "RSVpreF + Nirsevimab (High, Mod & Low In-Season)"
 )
 n_str <- length(v_names_str)
 
