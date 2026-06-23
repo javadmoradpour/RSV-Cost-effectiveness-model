@@ -95,9 +95,9 @@ build_params <- function(data_path = "./Data") {
     Du_DV_Infants     = 0.00845,
     Du_DV_Caregivers  = 0.00423,
 
-    # Vaccine coverage
-    coverage_RSVpreF                 = 0.65,
-    coverage_nirsevimab_ModerateRisk = 0.70,
+    # Vaccine coverage — base-case values defined in 02_parameters.R
+    coverage_RSVpreF                 = coverage_RSVpreF,
+    coverage_nirsevimab_ModerateRisk = coverage_nirsevimab_ModerateRisk,
 
     # Vaccine efficacy scalars — varied in sensitivity analyses
     eff_RSVMA_palivizumab     = eff_RSVMA_palivizumab,

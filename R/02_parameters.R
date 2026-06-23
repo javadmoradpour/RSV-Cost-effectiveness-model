@@ -85,3 +85,7 @@ efficacy_ICU_nirsevimab   <- 0.860
 
 # Nirsevimab coverage for high-risk infants is assumed to be 100 %
 coverage_nirsevimab_HighRisk <- 1.0
+
+# --- Vaccine coverage (base-case uptake proportions) ---
+coverage_RSVpreF                 <- 0.65
+coverage_nirsevimab_ModerateRisk <- 0.70
