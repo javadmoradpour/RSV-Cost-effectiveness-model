@@ -75,13 +75,13 @@ eff_RSVMA_palivizumab <- 0.70   # NACI estimate
 eff_inpat_palivizumab <- 0.82
 eff_ICU_palivizumab   <- 0.82
 
-efficacy_RSVMA_RSVpreF <- 0.525  # Kampmann 2023
-efficacy_inpat_RSVpreF <- 0.564
-efficacy_ICU_RSVpreF   <- 0.709
+efficacy_RSVMA_RSVpreF <- 0.75  # Pascal
+efficacy_inpat_RSVpreF <- 0.78
+efficacy_ICU_RSVpreF   <- 0.78
 
-efficacy_RSVMA_nirsevimab <- 0.795  # Simões 2023
-efficacy_inpat_nirsevimab <- 0.773
-efficacy_ICU_nirsevimab   <- 0.860
+efficacy_RSVMA_nirsevimab <- 0.80  # NACI
+efficacy_inpat_nirsevimab <- 0.81
+efficacy_ICU_nirsevimab   <- 0.90
 
 # Nirsevimab coverage for high-risk infants is assumed to be 100 %
 coverage_nirsevimab_HighRisk <- 1.0
